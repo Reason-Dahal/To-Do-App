@@ -1,91 +1,111 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const TodoApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class TodoApp extends StatelessWidget {
+  const TodoApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      home: const HomeScreen(),
+      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
+      home: const TodoScreen(),
     );
   }
 }
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class TodoScreen extends StatefulWidget {
+  const TodoScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<TodoScreen> createState() => _TodoScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  List<String> mylist = ["item 1", "item 2", "item 3"];
+class _TodoScreenState extends State<TodoScreen> {
+  // State Management: List of tasks
+  final List<String> _todoList = [];
+  final TextEditingController _controller = TextEditingController();
+
+  void _addTodo() {
+    if (_controller.text.isNotEmpty) {
+      setState(() {
+        _todoList.add(_controller.text);
+        _controller.clear();
+      });
+    }
+  }
+
+  void _removeTodo(int index) {
+    setState(() {
+      _todoList.removeAt(index);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBarDemo(),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Row(
+      // 1. App Bar
+      appBar: AppBar(
+        title: const Text('Simple To-Do'),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
+
+      // Body: TextField and ListView
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
               children: [
                 Expanded(
                   child: TextField(
-                    decoration: InputDecoration(
-                      alignLabelWithHint: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+                    controller: _controller,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter a new task...',
+                      border: OutlineInputBorder(),
                     ),
                   ),
                 ),
-                SizedBox(width: 15),
-                ElevatedButton(onPressed: () {}, child: Text("add")),
+                const SizedBox(width: 10),
+                IconButton.filled(
+                  onPressed: _addTodo,
+                  icon: const Icon(Icons.add),
+                ),
               ],
             ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: mylist.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    borderOnForeground: true,
-                    margin: EdgeInsets.all(10),
-                    child: ListTile(
-                      leading: Icon(Icons.check_box),
-                      trailing: Icon(Icons.abc_outlined),
-                      title: Text(mylist[index]),
-                    ),
-                  );
-                },
-              ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _todoList.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  leading: const Icon(Icons.check_circle_outline),
+                  title: Text(_todoList[index]),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    onPressed: () => _removeTodo(index),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+
+      // 2. Bottom Navigation Bar (Minimalist Style)
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Tasks'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
       ),
     );
   }
-}
-
-class AppBarDemo extends StatelessWidget implements PreferredSizeWidget {
-  @override
-  Widget build(BuildContext context) {
-    return AppBar(
-      title: Text(
-        "To Do App",
-        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-      ),
-      centerTitle: true,
-      backgroundColor: Colors.blueAccent,
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
