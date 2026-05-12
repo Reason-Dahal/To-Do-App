@@ -1,109 +1,159 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const TodoApp());
+  runApp(taskApp());
 }
 
-class TodoApp extends StatelessWidget {
-  const TodoApp({super.key});
+class taskApp extends StatelessWidget {
+  const taskApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
-      home: const TodoScreen(),
+      title: "todo",
+      home: homeScreen(),
     );
   }
 }
 
-class TodoScreen extends StatefulWidget {
-  const TodoScreen({super.key});
+class homeScreen extends StatefulWidget {
+  const homeScreen({super.key});
 
   @override
-  State<TodoScreen> createState() => _TodoScreenState();
+  State<homeScreen> createState() => _homeScreenState();
 }
 
-class _TodoScreenState extends State<TodoScreen> {
-  // State Management: List of tasks
-  final List<String> _todoList = [];
-  final TextEditingController _controller = TextEditingController();
+class _homeScreenState extends State<homeScreen> {
+  final List<String> taskList = [];
+  final TextEditingController taskController = TextEditingController();
+  final List<bool> isChecked = [];
 
-  void _addTodo() {
-    if (_controller.text.isNotEmpty) {
-      setState(() {
-        _todoList.add(_controller.text);
-        _controller.clear();
-      });
-    }
+  void addTask() {
+    setState(() {
+      if (taskController.text.isNotEmpty) {
+        taskList.add(taskController.text);
+        isChecked.add(false);
+        taskController.clear();
+      }
+    });
   }
 
-  void _removeTodo(int index) {
+  void deleteTask(int index) {
     setState(() {
-      _todoList.removeAt(index);
+      taskList.removeAt(index);
+      isChecked.removeAt(index);
     });
+  }
+
+  void editTask(int index) {
+    TextEditingController editController = TextEditingController(
+      text: taskList[index],
+    );
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Edit Task"),
+          content: TextField(controller: editController),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("Cancle"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  if (editController.text.isNotEmpty) {
+                    taskList[index] = editController.text;
+                  }
+                  Navigator.pop(context);
+                });
+              },
+              child: Text("Update"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 1. App Bar
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Simple To-Do'),
+        title: Text("To Do List", style: TextStyle(fontSize: 30)),
         centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.lightBlue,
+        leading: Icon(Icons.menu),
+        actions: [Icon(Icons.search)],
       ),
-
-      // Body: TextField and ListView
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
+      body: Padding(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Row(
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _controller,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter a new task...',
-                      border: OutlineInputBorder(),
+                    controller: taskController,
+                    decoration: InputDecoration(
+                      hintText: "Enter New Task",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                IconButton.filled(
-                  onPressed: _addTodo,
-                  icon: const Icon(Icons.add),
-                ),
+                SizedBox(width: 20),
+                ElevatedButton(onPressed: addTask, child: Text("Add")),
               ],
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _todoList.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  leading: const Icon(Icons.check_circle_outline),
-                  title: Text(_todoList[index]),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () => _removeTodo(index),
-                  ),
-                );
-              },
+            SizedBox(height: 15),
+            Expanded(
+              child: ListView.builder(
+                itemCount: taskList.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    child: ListTile(
+                      leading: Checkbox(
+                        value: isChecked[index],
+                        onChanged: (bool? value) {
+                          setState(() {
+                            isChecked[index] = value!;
+                          });
+                        },
+                      ),
+                      title: Text(taskList[index]),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed: () => deleteTask(index),
+                            icon: Icon(Icons.delete, color: Colors.red),
+                          ),
+                          IconButton(
+                            onPressed: () => editTask(index),
+                            icon: Icon(Icons.edit, color: Colors.blue),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-
-      // 2. Bottom Navigation Bar (Minimalist Style)
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.lightBlue,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Tasks'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Setting"),
         ],
       ),
     );
